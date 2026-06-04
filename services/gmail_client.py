@@ -4,9 +4,9 @@ import base64 # encode email message
 from email.mime.text import MIMEText # HTML email body
 from email.mime.multipart import MIMEMultipart # Multi-part email container(text + attachments)
 
-from google.auth.transport.requests import Request # HTTP request handler for token refresh
-from google.oauth2.credentials import Credentials # stores and manages OAuth2 access/refresh tokens
-from google_auth_oauthlib.flow import InstalledAppFlow # Handles OAuth2 login flow for desktop apps
+from google.auth.transport.requests import Request # HTTP request handler
+from google.oauth2.credentials import Credentials # stores and manages OAuth2 tokens
+from google_auth_oauthlib.flow import InstalledAppFlow # login flow for desktop apps
 from googleapiclient.discovery import build # builds the Gmail API service client
 
 from config.settings import GMAIL_CREDENTIALS_FILE, GMAIL_TOKEN_FILE # App-specific gmail auth file paths
@@ -168,10 +168,9 @@ class GmailClient:
                 userId='me', id=original_id, format='metadata'  # Only need headers, not full body
             ).execute()
 
-            headers = {
-                h['name']: h['value']
-                for h in original['payload']['headers']
-            }
+            headers = {}
+            for h in original['payload']['headers']:
+                headers[h['name']] = h['value']
 
             msg = MIMEText(reply_text)
             msg['To'] = headers.get('From', '')  # Reply to original sender
@@ -180,6 +179,7 @@ class GmailClient:
             msg['References'] = headers.get('Message-ID', '')  # Keeps email clients threading correctly
 
             raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()  # Gmail API requires base64-encoded raw message
+
             self.service.users().messages().send(
                 userId='me',
                 body={'raw': raw, 'threadId': original['threadId']}  # threadId keeps reply in same conversation
