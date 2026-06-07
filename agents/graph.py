@@ -1,5 +1,5 @@
 from langgraph.graph import StateGraph, END
-from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.checkpoint.memory import MemorySaver
 from .state import AgentState
 from .nodes import classify_email, execute_action, route_by_category, init_db
 
@@ -19,7 +19,7 @@ def build_graph(db_path:str = "email_agent.db"):
     appointment → execute_action(whatsapp) → END
     """
 
-    checkpointer = SqliteSaver.from_conn_string(db_path)
+    checkpointer = MemorySaver()
 
     workflow = StateGraph(AgentState)
     workflow.add_node("classify", classify_email)

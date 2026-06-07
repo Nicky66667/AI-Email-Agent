@@ -136,7 +136,7 @@ def execute_action(state:AgentState) -> dict:
             action_taken = 'skipped_low_confidence'
 
     elif category == 'promo':
-        success = gmail.archive_email(email_id, label='PROMOTIONS')
+        success = gmail.archieve_email(email_id, label='CATEGORY_PROMOTIONS')
         action_taken = 'archived' if success else 'archive_failed'
 
     elif category in ('important', 'appointment'):

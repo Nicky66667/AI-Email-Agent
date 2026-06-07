@@ -9,6 +9,7 @@ GMAIL_TOKEN_FILE = os.getenv("GMAIL_TOKEN_FILE", "token.json")
 
 # OpenAI
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+LLM_MODEL = "gpt-4o-mini"
 
 # Twilio WhatsApp
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")

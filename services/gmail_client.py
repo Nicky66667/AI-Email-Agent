@@ -125,7 +125,7 @@ class GmailClient:
 
             return False
 
-    def archieve_email(self, email_id:str, label:str = 'PROMOTIONS') -> bool:
+    def archieve_email(self, email_id:str, label:str = 'CATEGORY_PROMOTIONS') -> bool:
         """
         removes it from inbox and applies a category label.
         label options: PROMOTIONS / UPDATES / FORUMS / SOCIAL
