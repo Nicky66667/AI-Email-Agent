@@ -1,0 +1,21 @@
+# run this on terminal
+
+python -c "
+import json
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+
+with open('token.json') as f:
+    info = json.load(f)
+
+creds = Credentials.from_authorized_user_info(info)
+if creds.expired and creds.refresh_token:
+    creds.refresh(Request())
+    print('刷新成功！新 expiry:', creds.expiry)
+    with open('token.json', 'w') as f:
+        f.write(creds.to_json())
+    print('已写回 token.json')
+else:
+    print('token 状态:', creds.valid, creds.expired)
+"

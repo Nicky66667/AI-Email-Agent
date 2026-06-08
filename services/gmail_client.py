@@ -1,5 +1,6 @@
 import os
 import base64 # encode email message
+import json
 
 from email.mime.text import MIMEText # HTML email body
 from email.mime.multipart import MIMEMultipart # Multi-part email container(text + attachments)
@@ -17,34 +18,40 @@ SCOPES = [
 ]
 
 def get_gmail_service():
-    """
-    Returns an authorized Gmail API Service instance.
+    # Railway env：get token from variable
+    token_json = os.environ.get("GMAIL_TOKEN_JSON")
+    if token_json:
+        creds = Credentials.from_authorized_user_info(
+            json.loads(token_json), SCOPES
+        )
+        # token expiry but has refresh_token，auto refresh
+        if not creds.valid:
+            if creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                raise RuntimeError(
+                    "Gmail token expired and cannot be refreshed. "
+                    "Run locally to re-authenticate, then update GMAIL_TOKEN_JSON in Railway."
+                )
+        return build('gmail', 'v1', credentials=creds)
 
-    Ob first run, opens a browser for authorization; afterward auto-refreshes from tokrn.json
-    token.json expires for over 7 days that needs re-auth
-    """
-
+    # local env：original OAuth
     creds = None
-
     if os.path.exists(GMAIL_TOKEN_FILE):
-        creds = Credentials.from_authorized_user_file(GMAIL_TOKEN_FILE, SCOPES)  # Load saved token if it exists
+        creds = Credentials.from_authorized_user_file(GMAIL_TOKEN_FILE, SCOPES)
 
     if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token: # token expired but refreshable
+        if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
-
         else:
-            # first time auth: open browser to login
             flow = InstalledAppFlow.from_client_secrets_file(
                 GMAIL_CREDENTIALS_FILE, SCOPES
             )
-
             creds = flow.run_local_server(port=0)
+            with open(GMAIL_TOKEN_FILE, 'w') as f:
+                f.write(creds.to_json())
 
-            with open(GMAIL_TOKEN_FILE,'w') as f:
-                f.write(creds.to_json()) # save cred to skip auth next time
-
-    return build('gmail','v1',credentials=creds) # return gmail API client
+    return build('gmail', 'v1', credentials=creds)
 
 class GmailClient:
     def __init__(self):
