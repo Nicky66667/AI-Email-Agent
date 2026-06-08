@@ -1,18 +1,12 @@
-
-"""
-CLI debug entry
-
-process the 5 most recent unread emails and print the results.
-- to quickly validating the entire pipeline without UI.
-"""
-
-
+from apscheduler.schedulers.blocking import BlockingScheduler
+from config.settings import POLL_INTERVAL_SECONDS
 from langchain_core.messages import HumanMessage
 from agents import agents_graph
 from agents.nodes import is_processed
 from services.gmail_client import GmailClient
 
 gmail = GmailClient()
+
 
 def process_one_email(email:dict) -> dict:
     """process single email and return final state"""
@@ -75,6 +69,31 @@ def run_batch(max_emails:int=5):
     print(f"\n{'=' * 60}")
     print(f"Done. Processed: {processed}, Skipped (already done): {skipped}")
 
+def scheduled_run():
+    """Scheduled task: fetch and process unread emails every N seconds."""
+    print(f"\n[Scheduler] Running at interval...")
+    run_batch(max_emails=20)
+
 
 if __name__ == "__main__":
-    run_batch(max_emails=5)
+    import sys
+
+    if len(sys.argv) > 1 and sys.argv[1] == "--watch":
+
+        print(f"Starting email watcher (interval: {POLL_INTERVAL_SECONDS}s)")
+        print("Press Ctrl+C to stop.\n")
+
+        scheduler = BlockingScheduler()
+        scheduler.add_job(
+            scheduled_run,
+            'interval',
+            seconds=POLL_INTERVAL_SECONDS,
+            id='email_poll'
+        )
+
+        # Run once at startup, don't need to wait for the first interval
+        scheduled_run()
+        scheduler.start()
+    else:
+        # single processing mode
+        run_batch(max_emails=5)
