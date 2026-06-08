@@ -43,7 +43,7 @@ async def handle_whatsapp_reply(
     Returns an empty TwiML response (tells Twilio not to response to the user)
     """
     body = Body.strip()
-    body_lower = body_lower()
+    body_lower = body.lower()
 
     print(f"[Webhook] Received from {From}: {body[:100]}")  # e.g., [Webhook] Received from whatsapp:+447911123456: reply please reschedule our meeting
 
